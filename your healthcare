@@ -1,0 +1,73 @@
+import pandas as pd
+import numpy as np
+
+# Set random seed for reproducibility
+np.random.seed(42)
+
+# Number of samples
+n_samples = 1000
+
+# Generate mock data
+data = {
+    'age': np.random.randint(18, 90, n_samples),
+    'gender': np.random.choice(['M', 'F'], n_samples),
+    'bmi': np.random.uniform(18.5, 40, n_samples),
+    'blood_pressure_systolic': np.random.randint(90, 180, n_samples),
+    'blood_pressure_diastolic': np.random.randint(60, 120, n_samples),
+    'cholesterol': np.random.randint(120, 300, n_samples),
+    'glucose': np.random.randint(70, 200, n_samples),
+    'smoking': np.random.choice([0, 1], n_samples),
+    'alcohol_consumption': np.random.choice([0, 1, 2, 3], n_samples),  # 0: none, 1: light, 2: moderate, 3: heavy
+    'physical_activity': np.random.choice([0, 1, 2], n_samples),  # 0: low, 1: moderate, 2: high
+    'family_history': np.random.choice([0, 1], n_samples),
+    'previous_heart_problems': np.random.choice([0, 1], n_samples),
+    'diabetes': np.random.choice([0, 1], n_samples),
+}
+
+# Create DataFrame
+df = pd.DataFrame(data)
+
+# Generate more features based on existing ones
+df['heart_rate'] = np.where(df['age'] > 60, 
+                            np.random.randint(60, 100, n_samples), 
+                            np.random.randint(70, 110, n_samples))
+
+df['hdl_cholesterol'] = np.random.randint(30, 80, n_samples)
+df['ldl_cholesterol'] = df['cholesterol'] - df['hdl_cholesterol'] - np.random.randint(10, 50, n_samples)
+
+# Create a target variable (0: healthy, 1: at risk)
+df['target'] = ((df['age'] > 50) & 
+                (df['bmi'] > 30) & 
+                (df['blood_pressure_systolic'] > 140) & 
+                (df['cholesterol'] > 200) & 
+                (df['smoking'] == 1) & 
+                (df['physical_activity'] == 0)).astype(int)
+
+# Add some randomness to the target
+df.loc[np.random.choice(df.index, int(n_samples * 0.1)), 'target'] = 1 - df['target']
+
+# Generate the remaining features to reach a total of 30
+for i in range(1, 14):  # This will create 13 additional features
+    df[f'additional_feature_{i}'] = np.random.randn(n_samples)
+
+# Save to CSV
+df.to_csv('your_healthcare_dataset.csv', index=False)
+
+print("Mock dataset 'your_healthcare_dataset.csv' has been created.")
+print(f"Dataset shape: {df.shape}")
+print("\nFirst few rows:")
+print(df.head())
+print("\nFeature summary:")
+print(df.describe())
+
+# At the end of your training script
+torch.save({
+    'input_features': model.fc1.in_features,
+    'state_dict': model.state_dict()
+}, 'global_model.pth')
+
+# To verify the save was successful
+loaded_data = torch.load('global_model.pth', map_location=torch.device('cpu'))
+print("Model saved and loaded successfully.")
+print(f"Input features: {loaded_data['input_features']}")
+print(f"State dict keys: {loaded_data['state_dict'].keys()}")
